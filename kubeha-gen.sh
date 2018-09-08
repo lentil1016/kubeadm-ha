@@ -1,11 +1,39 @@
 #/bin/bash
+if [ -f ./cluster-info ]; then
+	source ./cluster-info 
+	else
+	echo -n "Enter the IP address of master-01: "
+	read CP0_IP
+	echo -n "Enter the Hostname of master-01: "
+	read CP0_HOSTNAME
+	echo -n "Enter the IP address of master-02: "
+	read CP1_IP
+	echo -n "Enter the Hostname of master-02: "
+	read CP1_HOSTNAME
+	echo -n "Enter the IP address of master-03: "
+	read CP2_IP
+	echo -n "Enter the Hostname of master-03: "
+	read CP2_HOSTNAME
+fi
 
-CP0_IP=10.130.29.80
-CP0_HOSTNAME=centos-7-x86-64-29-80
-CP1_IP=10.130.29.81
-CP1_HOSTNAME=centos-7-x86-64-29-81
-CP2_IP=10.130.29.82
-CP2_HOSTNAME=centos-7-x86-64-29-82
+echo """
+cluster-info:
+  master-01:        ${CP0_IP}
+                    ${CP0_HOSTNAME}
+  master-02:        ${CP1_IP}
+                    ${CP1_HOSTNAME}
+  master-02:        ${CP2_IP}
+                    ${CP2_HOSTNAME}
+"""
+echo -n 'Please print "yes" to continue or "no" to cancle: '
+read AGREE
+while [ "${AGREE}" != "yes" ]; do
+	if [ "${AGREE}" == "no" ]; then
+		exit 0;
+	else
+		echo -n 'Please print "yes" to continue or "no" to cancle: '
+	fi
+done
 
 HOSTS=(${CP0_HOSTNAME} ${CP1_HOSTNAME} ${CP2_HOSTNAME})
 IPS=(${CP0_IP} ${CP1_IP} ${CP2_IP})
