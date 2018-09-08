@@ -167,10 +167,12 @@ done
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/calico/rbac.yaml
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/calico/calico.yaml
 
-UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
-while [ "${UNREADY}" != "" ]; do
+POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
+NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
+while [ "${POD_UNREADY}" != "" || "${NODE_UNREADY}" != "" ]; do
   sleep 1
-  UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
+  POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
+  NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
 done
 
 kubectl get nodes
