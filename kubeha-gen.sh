@@ -169,7 +169,7 @@ kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/
 
 POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
 NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
-while [ "${POD_UNREADY}" != "" || "${NODE_UNREADY}" != "" ]; do
+while [ "${POD_UNREADY}" != "" -o "${NODE_UNREADY}" != "" ]; do
   sleep 1
   POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
   NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
