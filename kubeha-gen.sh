@@ -1,22 +1,49 @@
 #/bin/bash
+
+function check_parm()
+{
+  if [ "${2}" == "" ]; then
+    echo -n "${1}"
+    return 1
+  else
+    return 0
+  fi
+}
+
 if [ -f ./cluster-info ]; then
 	source ./cluster-info 
-	else
-	echo -n "Enter the IP address of master-01: "
+fi
+
+check_parm "Enter the IP address of master-01: " ${CP0_IP} 
+if [ $? -eq 1 ]; then
 	read CP0_IP
-	echo -n "Enter the Hostname of master-01: "
+fi
+check_parm "Enter the Hostname of master-01: " ${CP0_HOSTNAME}
+if [ $? -eq 1 ]; then
 	read CP0_HOSTNAME
-	echo -n "Enter the IP address of master-02: "
+fi
+check_parm "Enter the IP address of master-02: " ${CP1_IP}
+if [ $? -eq 1 ]; then
 	read CP1_IP
-	echo -n "Enter the Hostname of master-02: "
+fi
+check_parm "Enter the Hostname of master-02: " ${CP1_HOSTNAME}
+if [ $? -eq 1 ]; then
 	read CP1_HOSTNAME
-	echo -n "Enter the IP address of master-03: "
+fi
+check_parm "Enter the IP address of master-03: " ${CP2_IP}
+if [ $? -eq 1 ]; then
 	read CP2_IP
-	echo -n "Enter the Hostname of master-03: "
+fi
+check_parm "Enter the Hostname of master-03: " ${CP2_HOSTNAME}
+if [ $? -eq 1 ]; then
 	read CP2_HOSTNAME
-	echo -n "Enter the VIP: "
+fi
+check_parm "Enter the VIP: " ${VIP}
+if [ $? -eq 1 ]; then
 	read VIP
-	echo -n "Enter the Net Interface: "
+fi
+check_parm "Enter the Net Interface: " ${NET_IF}
+if [ $? -eq 1 ]; then
 	read NET_IF
 fi
 
@@ -29,6 +56,7 @@ cluster-info:
   master-02:        ${CP2_IP}
                     ${CP2_HOSTNAME}
   VIP:              ${VIP}
+  Net Interface:    ${NET_IF}
 """
 echo -n 'Please print "yes" to continue or "no" to cancle: '
 read AGREE
@@ -97,7 +125,7 @@ virtual_server ${VIP} 6443 {
 
 ${HEALTH_CHECK}
 }
-""" >> ~/ikube/keepalived-${index}.conf
+""" > ~/ikube/keepalived-${index}.conf
   scp ~/ikube/keepalived-${index}.conf ${host}:/etc/keepalived/keepalived.conf
 
   ssh ${host} "
