@@ -230,6 +230,41 @@ done
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/calico/rbac.yaml
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/calico/calico.yaml
 
+echo """
+[req] 
+distinguished_name = req_distinguished_name
+prompt = yes
+
+[ req_distinguished_name ]
+countryName                     = Country Name (2 letter code)
+countryName_value               = CN
+
+stateOrProvinceName             = State or Province Name (full name)
+stateOrProvinceName_value       = Beijing
+
+localityName                    = Locality Name (eg, city)
+localityName_value              = Haidian
+
+organizationName                = Organization Name (eg, company)
+organizationName_value          = Channelsoft
+
+organizationalUnitName          = Organizational Unit Name (eg, section)
+organizationalUnitName_value    = R & D Department
+
+commonName                      = Common Name (eg, your name or your server\'s hostname)
+commonName_value                = *.multi.io
+
+
+emailAddress                    = Email Address
+emailAddress_value              = lentil1016@gmail.com
+""" > ~/ikube/openssl.cnf
+openssl req -newkey rsa:4096 -nodes -config ~/ikube/tls/openssl.cnf -days 3650 -x509 -out ~/ikube/tls/tls.crt -keyout ~/ikube/tls/tls.key
+kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/ikube/tls/tls.key
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/plugin/rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/plugin/traefik.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/plugin/heapster.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/plugin/kubernetes-dashboard.yaml
+
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
   ssh ${host} "sed -i 's/etcd-servers=https:\/\/127.0.0.1:2379/etcd-servers=https:\/\/${CP0_IP}:2379,https:\/\/${CP1_IP}:2379,https:\/\/${CP2_IP}:2379/g' /etc/kubernetes/manifests/kube-apiserver.yaml"
@@ -248,6 +283,7 @@ echo
 kubectl get cs
 kubectl get nodes
 kubectl get pods -n kube-system
+
 echo """
 join command:
   `kubeadm token create --print-join-command|sed "s/${CP0_IP}/${VIP}/g"`"""
