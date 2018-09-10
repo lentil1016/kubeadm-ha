@@ -219,5 +219,6 @@ echo
 kubectl get cs
 kubectl get nodes
 kubectl get pods -n kube-system
-echo
-kubeadm token create --print-join-command|sed -i "s/${CP0_IP}/${VIP}/g"
+echo """
+join command:
+  `kubeadm token create --print-join-command|sed "s/${CP0_IP}/${VIP}/g"`"""
