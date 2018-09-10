@@ -41,16 +41,26 @@ done
 HOSTS=(${CP0_HOSTNAME} ${CP1_HOSTNAME} ${CP2_HOSTNAME})
 IPS=(${CP0_IP} ${CP1_IP} ${CP2_IP})
 
+mkdir -p ~/ikube
+
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
+  ip=${IPS[${index}]}
+
   ssh ${host} "
     kubeadm reset -f
     rm -rf /etc/kubernetes/pki/"
-done
 
-mkdir -p ~/ikube
+  if [ ${index} -ne 0 ]; then
+    ETCD_MEMBER="${ETCD_MEMBER},"
+    ETCD_STATUS="existing"
+  else
+    ETCD_MEMBER=""
+    ETCD_STATUS="new"
+  fi
+  ETCD_MEMBER="${ETCD_MEMBER}${host}=https://${ip}:2380"
 
-echo """
+  echo """
 apiVersion: kubeadm.k8s.io/v1alpha2
 kind: MasterConfiguration
 kubernetesVersion: v1.11.0
@@ -62,92 +72,29 @@ apiServerCertSANs:
 - ${CP1_HOSTNAME}
 - ${CP2_HOSTNAME}
 - ${VIP}
+kubeProxy:
+  config:
+    mode: ipvs
 etcd:
   local:
     extraArgs:
-      listen-client-urls: \"https://127.0.0.1:2379,https://${CP0_IP}:2379\"
-      advertise-client-urls: \"https://${CP0_IP}:2379\"
-      listen-peer-urls: \"https://${CP0_IP}:2380\"
-      initial-advertise-peer-urls: \"https://${CP0_IP}:2380\"
-      initial-cluster: \"${CP0_HOSTNAME}=https://${CP0_IP}:2380\"
+      listen-client-urls: https://127.0.0.1:2379,https://${ip}:2379
+      advertise-client-urls: https://${ip}:2379
+      listen-peer-urls: https://${ip}:2380
+      initial-advertise-peer-urls: https://${ip}:2380
+      initial-cluster: ${ETCD_MEMBER}
+      initial-cluster-state: ${ETCD_STATUS}
     serverCertSANs:
-      - ${CP0_HOSTNAME}
-      - ${CP0_IP}
+      - ${host}
+      - ${ip}
     peerCertSANs:
-      - ${CP0_HOSTNAME}
-      - ${CP0_IP}
+      - ${host}
+      - ${ip}
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
-  podSubnet: \"172.168.0.0/16\"
-""" > ~/ikube/kubeadm-config-m0.yaml
+  podSubnet: 172.168.0.0/16
+""" > ~/ikube/kubeadm-config-m${index}.yaml
 
-echo """
-apiVersion: kubeadm.k8s.io/v1alpha2
-kind: MasterConfiguration
-kubernetesVersion: v1.11.0
-apiServerCertSANs:
-- ${CP0_IP}
-- ${CP1_IP}
-- ${CP2_IP}
-- ${CP0_HOSTNAME}
-- ${CP1_HOSTNAME}
-- ${CP2_HOSTNAME}
-- ${VIP}
-etcd:
-  local:
-    extraArgs:
-      listen-client-urls: \"https://127.0.0.1:2379,https://${CP1_IP}:2379\"
-      advertise-client-urls: \"https://${CP1_IP}:2379\"
-      listen-peer-urls: \"https://${CP1_IP}:2380\"
-      initial-advertise-peer-urls: \"https://${CP1_IP}:2380\"
-      initial-cluster: \"${CP0_HOSTNAME}=https://${CP0_IP}:2380,${CP1_HOSTNAME}=https://${CP1_IP}:2380\"
-      initial-cluster-state: \"existing\"
-    serverCertSANs:
-      - ${CP1_HOSTNAME}
-      - ${CP1_IP}
-    peerCertSANs:
-      - ${CP1_HOSTNAME}
-      - ${CP1_IP}
-networking:
-  # This CIDR is a Calico default. Substitute or remove for your CNI provider.
-  podSubnet: \"172.168.0.0/16\"
-""" > ~/ikube/kubeadm-config-m1.yaml
-
-echo """
-apiVersion: kubeadm.k8s.io/v1alpha2
-kind: MasterConfiguration
-kubernetesVersion: v1.11.0
-apiServerCertSANs:
-- ${CP0_IP}
-- ${CP1_IP}
-- ${CP2_IP}
-- ${CP0_HOSTNAME}
-- ${CP1_HOSTNAME}
-- ${CP2_HOSTNAME}
-- ${VIP}
-etcd:
-  local:
-    extraArgs:
-      listen-client-urls: \"https://127.0.0.1:2379,https://${CP2_IP}:2379\"
-      advertise-client-urls: \"https://${CP2_IP}:2379\"
-      listen-peer-urls: \"https://${CP2_IP}:2380\"
-      initial-advertise-peer-urls: \"https://${CP2_IP}:2380\"
-      initial-cluster: \"${CP0_HOSTNAME}=https://${CP0_IP}:2380,${CP1_HOSTNAME}=https://${CP1_IP}:2380,${CP2_HOSTNAME}=https://${CP2_IP}:2380\"
-      initial-cluster-state: \"existing\"
-    serverCertSANs:
-      - ${CP2_HOSTNAME}
-      - ${CP2_IP}
-    peerCertSANs:
-      - ${CP2_HOSTNAME}
-      - ${CP2_IP}
-networking:
-  # This CIDR is a Calico default. Substitute or remove for your CNI provider.
-  podSubnet: \"172.168.0.0/16\"
-""" > ~/ikube/kubeadm-config-m2.yaml
-
-
-for index in 0 1 2; do
-  host=${HOSTS[${index}]}
   scp ~/ikube/kubeadm-config-m${index}.yaml ${host}:/etc/kubernetes/kubeadm-config.yaml
 done
 
