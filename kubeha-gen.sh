@@ -68,7 +68,7 @@ while [ "${AGREE}" != "yes" ]; do
 	fi
 done
 
-mkdir -p ~/ikube
+mkdir -p ~/ikube/tls
 
 HOSTS=(${CP0_HOSTNAME} ${CP1_HOSTNAME} ${CP2_HOSTNAME})
 IPS=(${CP0_IP} ${CP1_IP} ${CP2_IP})
