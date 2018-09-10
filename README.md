@@ -13,3 +13,9 @@ VIP=10.130.29.83
 
 $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/kubeha-gen.sh)"
 ```
+
+## generate join command
+
+``` shell
+kubeadm token create --print-join-command|sed 's/${LOCAL_IP}/${VIP}/g'
+```

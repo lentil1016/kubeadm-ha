@@ -207,11 +207,11 @@ for index in 0 1 2; do
 done
 
 POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
-NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
+NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep 'NotReady'`
 while [ "${POD_UNREADY}" != "" -o "${NODE_UNREADY}" != "" ]; do
   sleep 1
   POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
-  NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
+  NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep 'NotReady'`
 done
 
 echo
