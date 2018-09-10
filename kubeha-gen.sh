@@ -14,6 +14,8 @@ if [ -f ./cluster-info ]; then
 	read CP2_IP
 	echo -n "Enter the Hostname of master-03: "
 	read CP2_HOSTNAME
+	echo -n "Enter the VIP: "
+	read VIP
 fi
 
 echo """
@@ -24,6 +26,7 @@ cluster-info:
                     ${CP1_HOSTNAME}
   master-02:        ${CP2_IP}
                     ${CP2_HOSTNAME}
+  VIP:              ${VIP}
 """
 echo -n 'Please print "yes" to continue or "no" to cancle: '
 read AGREE
@@ -46,18 +49,19 @@ for index in 0 1 2; do
 done
 
 mkdir -p ~/ikube
- 
+
 echo """
 apiVersion: kubeadm.k8s.io/v1alpha2
 kind: MasterConfiguration
 kubernetesVersion: v1.11.0
 apiServerCertSANs:
-- ${CP0_IP} 
+- ${CP0_IP}
 - ${CP1_IP}
 - ${CP2_IP}
 - ${CP0_HOSTNAME}
 - ${CP1_HOSTNAME}
 - ${CP2_HOSTNAME}
+- ${VIP}
 etcd:
   local:
     extraArgs:
@@ -76,18 +80,19 @@ networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: \"172.168.0.0/16\"
 """ > ~/ikube/kubeadm-config-m0.yaml
- 
+
 echo """
 apiVersion: kubeadm.k8s.io/v1alpha2
 kind: MasterConfiguration
 kubernetesVersion: v1.11.0
 apiServerCertSANs:
-- ${CP0_IP} 
+- ${CP0_IP}
 - ${CP1_IP}
 - ${CP2_IP}
 - ${CP0_HOSTNAME}
 - ${CP1_HOSTNAME}
 - ${CP2_HOSTNAME}
+- ${VIP}
 etcd:
   local:
     extraArgs:
@@ -107,18 +112,19 @@ networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: \"172.168.0.0/16\"
 """ > ~/ikube/kubeadm-config-m1.yaml
- 
+
 echo """
 apiVersion: kubeadm.k8s.io/v1alpha2
 kind: MasterConfiguration
 kubernetesVersion: v1.11.0
 apiServerCertSANs:
-- ${CP0_IP} 
+- ${CP0_IP}
 - ${CP1_IP}
 - ${CP2_IP}
 - ${CP0_HOSTNAME}
 - ${CP1_HOSTNAME}
 - ${CP2_HOSTNAME}
+- ${VIP}
 etcd:
   local:
     extraArgs:
@@ -208,5 +214,10 @@ while [ "${POD_UNREADY}" != "" -o "${NODE_UNREADY}" != "" ]; do
   NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep -vE 'Ready|STATUS'`
 done
 
+echo
+
+kubectl get cs
 kubectl get nodes
 kubectl get pods -n kube-system
+echo
+kubeadm token create --print-join-command|sed -i "s/${CP0_IP}/${VIP}/g"
