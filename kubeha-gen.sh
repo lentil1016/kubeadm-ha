@@ -257,7 +257,7 @@ commonName_value                = *.multi.io
 
 emailAddress                    = Email Address
 emailAddress_value              = lentil1016@gmail.com
-""" > ~/ikube/openssl.cnf
+""" > ~/ikube/tls/openssl.cnf
 openssl req -newkey rsa:4096 -nodes -config ~/ikube/tls/openssl.cnf -days 3650 -x509 -out ~/ikube/tls/tls.crt -keyout ~/ikube/tls/tls.key
 kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/ikube/tls/tls.key
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/plugin/rbac.yaml

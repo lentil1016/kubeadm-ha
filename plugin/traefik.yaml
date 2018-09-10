@@ -79,6 +79,9 @@ spec:
         name: traefik-ingress-lb
     spec:
       serviceAccountName: traefik-ingress-controller
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       terminationGracePeriodSeconds: 60
       hostNetwork: true
       volumes:
