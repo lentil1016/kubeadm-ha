@@ -16,6 +16,8 @@ if [ -f ./cluster-info ]; then
 	read CP2_HOSTNAME
 	echo -n "Enter the VIP: "
 	read VIP
+	echo -n "Enter the Net Interface: "
+	read NET_IF
 fi
 
 echo """
@@ -38,16 +40,68 @@ while [ "${AGREE}" != "yes" ]; do
 	fi
 done
 
+mkdir -p ~/ikube
+
 HOSTS=(${CP0_HOSTNAME} ${CP1_HOSTNAME} ${CP2_HOSTNAME})
 IPS=(${CP0_IP} ${CP1_IP} ${CP2_IP})
 
-mkdir -p ~/ikube
+PRIORITY=(100 50 30)
+STATE=("MASTER" "BACKUP" "BACKUP")
+HEALTH_CHECK=""
+for index in 0 1 2; do
+  HEALTH_CHECK=${HEALTH_CHECK}"""
+    real_server ${IPS[$index]} 6443 {
+        weight 1
+        SSL_GET {
+            url {
+              path /healthz
+              status_code 200
+            }
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+        }
+    }
+"""
+done
 
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
   ip=${IPS[${index}]}
+  echo """
+global_defs {
+   router_id LVS_DEVEL
+}
+
+vrrp_instance VI_1 {
+    state ${STATE[${index}]}
+    interface ${NET_IF}
+    virtual_router_id 80
+    priority ${PRIORITY[${index}]}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass just0kk
+    }
+    virtual_ipaddress {
+        ${VIP}
+    }
+}
+
+virtual_server ${VIP} 6443 {
+    delay_loop 6
+    lb_algo rr
+    lb_kind NAT
+    persistence_timeout 50
+    protocol TCP
+
+${HEALTH_CHECK}
+}
+""" >> ~/ikube/keepalived-${index}.conf
+  scp ~/ikube/keepalived-${index}.conf ${host}:/etc/keepalived/keepalived.conf
 
   ssh ${host} "
+    systemctl restart keepalived
     kubeadm reset -f
     rm -rf /etc/kubernetes/pki/"
 
