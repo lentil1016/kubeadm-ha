@@ -65,6 +65,7 @@ while [ "${AGREE}" != "yes" ]; do
 		exit 0;
 	else
 		echo -n 'Please print "yes" to continue or "no" to cancle: '
+		read AGREE
 	fi
 done
 
