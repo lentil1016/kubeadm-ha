@@ -1,5 +1,7 @@
 # install
 
+![](https://img.shields.io/badge/Dist-Centos7-red.svg)  ![](https://img.shields.io/badge/DNS-CoreDNS-brightgreen.svg)  ![](https://img.shields.io/badge/Mode-HA-brightgreen.svg)  ![](https://img.shields.io/badge/Proxy-IPVS-brightgreen.svg)  ![](https://img.shields.io/badge/Net-Calico-brightgreen.svg)
+
 ``` shell
 # 创建集群信息文件
 $ cat ./cluster-info
