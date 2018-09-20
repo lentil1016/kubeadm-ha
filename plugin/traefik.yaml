@@ -60,9 +60,6 @@ data:
           [[entryPoints.https.tls.certificates]]
           CertFile = "/ssl/tls.crt"
           KeyFile = "/ssl/tls.key"
-    [backends]
-      [backends.backend1]
-        [backends.backend1.loadbalancer.stickiness]
 ---
 kind: DaemonSet
 apiVersion: extensions/v1beta1
