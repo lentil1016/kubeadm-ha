@@ -269,7 +269,7 @@ done
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
   ssh ${host} "sed -i 's/etcd-servers=https:\/\/127.0.0.1:2379/etcd-servers=https:\/\/${CP0_IP}:2379,https:\/\/${CP1_IP}:2379,https:\/\/${CP2_IP}:2379/g' /etc/kubernetes/manifests/kube-apiserver.yaml"
-  ssh ${host} "sed -i 's/${CP0_IP}/${VIP}/g ~/.kube/config"
+  ssh ${host} "sed -i 's/${CP0_IP}/${VIP}/g' ~/.kube/config"
 done
 
 POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
