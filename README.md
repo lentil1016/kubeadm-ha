@@ -14,7 +14,7 @@ CP2_HOSTNAME=centos-7-x86-64-29-82
 VIP=10.130.29.83
 NET_IF=ens32
 
-$ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/master/kubeha-gen.sh)"
+$ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/kubeha-gen.sh)"
 ```
 
 ## generate join command
