@@ -46,6 +46,10 @@ check_parm "Enter the Net Interface: " ${NET_IF}
 if [ $? -eq 1 ]; then
 	read NET_IF
 fi
+check_parm "Enter the cluster CIDR: " ${CIDR}
+if [ $? -eq 1 ]; then
+	read CIDR
+fi
 
 echo """
 cluster-info:
@@ -57,6 +61,7 @@ cluster-info:
                     ${CP2_HOSTNAME}
   VIP:              ${VIP}
   Net Interface:    ${NET_IF}
+  CIDR:             ${CIDR}
 """
 echo -n 'Please print "yes" to continue or "no" to cancle: '
 read AGREE
@@ -175,7 +180,7 @@ etcd:
       - ${ip}
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
-  podSubnet: 172.168.0.0/16
+  podSubnet: ${CIDR}
 """ > ~/ikube/kubeadm-config-m${index}.yaml
 
   scp ~/ikube/kubeadm-config-m${index}.yaml ${host}:/etc/kubernetes/kubeadm-config.yaml

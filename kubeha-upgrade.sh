@@ -46,6 +46,10 @@ check_parm "Enter the Net Interface: " ${NET_IF}
 if [ $? -eq 1 ]; then
 	read NET_IF
 fi
+check_parm "Enter the cluster CIDR: " ${CIDR}
+if [ $? -eq 1 ]; then
+	read CIDR
+fi
 
 echo """
 cluster-info:
@@ -57,6 +61,7 @@ cluster-info:
                     ${CP2_HOSTNAME}
   VIP:              ${VIP}
   Net Interface:    ${NET_IF}
+  CIDR:             ${CIDR}
 """
 echo -n 'Please print "yes" to continue or "no" to cancle: '
 read AGREE
@@ -173,7 +178,7 @@ etcd:
       - ${ip}
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
-  podSubnet: 172.168.0.0/16
+  podSubnet: ${CIDR}
 """ > ~/ikube/kubeadm-config-m${index}.yaml
 
   scp ~/ikube/kubeadm-config-m${index}.yaml ${host}:/etc/kubernetes/kubeadm-config.yaml
@@ -259,44 +264,6 @@ for index in 1 2; do
     kubeadm alpha phase controlplane all --config /etc/kubernetes/kubeadm-config.yaml
     kubeadm alpha phase mark-master --config /etc/kubernetes/kubeadm-config.yaml"
 done
-
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/calico/rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/calico/calico.yaml
-
-echo """
-[req] 
-distinguished_name = req_distinguished_name
-prompt = yes
-
-[ req_distinguished_name ]
-countryName                     = Country Name (2 letter code)
-countryName_value               = CN
-
-stateOrProvinceName             = State or Province Name (full name)
-stateOrProvinceName_value       = Beijing
-
-localityName                    = Locality Name (eg, city)
-localityName_value              = Haidian
-
-organizationName                = Organization Name (eg, company)
-organizationName_value          = Channelsoft
-
-organizationalUnitName          = Organizational Unit Name (eg, section)
-organizationalUnitName_value    = R & D Department
-
-commonName                      = Common Name (eg, your name or your server\'s hostname)
-commonName_value                = *.multi.io
-
-
-emailAddress                    = Email Address
-emailAddress_value              = lentil1016@gmail.com
-""" > ~/ikube/tls/openssl.cnf
-openssl req -newkey rsa:4096 -nodes -config ~/ikube/tls/openssl.cnf -days 3650 -x509 -out ~/ikube/tls/tls.crt -keyout ~/ikube/tls/tls.key
-kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/ikube/tls/tls.key
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/traefik.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/heapster.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/kubernetes-dashboard.yaml
 
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
