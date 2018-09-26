@@ -221,6 +221,14 @@ kubectl exec \
   --endpoints=https://${CP0_IP}:2379 \
   member update ${ETCD_MASTER_ID} https://${CP0_IP}:2380
 
+kubectl exec \
+  -n kube-system etcd-${CP0_HOSTNAME} -- etcdctl \
+  --ca-file /etc/kubernetes/pki/etcd/ca.crt \
+  --cert-file /etc/kubernetes/pki/etcd/peer.crt \
+  --key-file /etc/kubernetes/pki/etcd/peer.key \
+  --endpoints=https://${CP0_IP}:2379 \
+  member list
+
 for index in 1 2; do
   host=${HOSTS[${index}]}
   ip=${IPS[${index}]}
@@ -235,14 +243,6 @@ for index in 1 2; do
   scp /etc/kubernetes/pki/etcd/ca.key $host:/etc/kubernetes/pki/etcd/ca.key
   scp /etc/kubernetes/admin.conf $host:/etc/kubernetes/admin.conf
   scp /etc/kubernetes/admin.conf $host:~/.kube/config
-
-  kubectl exec \
-    -n kube-system etcd-${CP0_HOSTNAME} -- etcdctl \
-    --ca-file /etc/kubernetes/pki/etcd/ca.crt \
-    --cert-file /etc/kubernetes/pki/etcd/peer.crt \
-    --key-file /etc/kubernetes/pki/etcd/peer.key \
-    --endpoints=https://${CP0_IP}:2379 \
-    member list
 
   kubectl exec \
     -n kube-system etcd-${CP0_HOSTNAME} -- etcdctl \
