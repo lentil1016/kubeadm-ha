@@ -217,6 +217,7 @@ for index in 1 2; do
   scp /etc/kubernetes/pki/etcd/ca.crt $host:/etc/kubernetes/pki/etcd/ca.crt
   scp /etc/kubernetes/pki/etcd/ca.key $host:/etc/kubernetes/pki/etcd/ca.key
   scp /etc/kubernetes/admin.conf $host:/etc/kubernetes/admin.conf
+  scp /etc/kubernetes/admin.conf $host:~/.kube/config
 
   ETCD_MASTER_ID=`kubectl exec \
     -n kube-system etcd-${CP0_HOSTNAME} -- etcdctl \
