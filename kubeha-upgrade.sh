@@ -232,7 +232,7 @@ kubectl exec \
 for index in 1 2; do
   host=${HOSTS[${index}]}
   ip=${IPS[${index}]}
-  ssh $host "mkdir -p /etc/kubernetes/pki/etcd"
+  ssh $host "mkdir -p /etc/kubernetes/pki/etcd; mkdir -p ~/.kube"
   scp /etc/kubernetes/pki/ca.crt $host:/etc/kubernetes/pki/ca.crt
   scp /etc/kubernetes/pki/ca.key $host:/etc/kubernetes/pki/ca.key
   scp /etc/kubernetes/pki/sa.key $host:/etc/kubernetes/pki/sa.key
