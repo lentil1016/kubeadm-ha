@@ -276,8 +276,10 @@ kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/
 
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
+  ip=${IPS[${index}]}
   ssh ${host} "sed -i 's/etcd-servers=https:\/\/127.0.0.1:2379/etcd-servers=https:\/\/${CP0_IP}:2379,https:\/\/${CP1_IP}:2379,https:\/\/${CP2_IP}:2379/g' /etc/kubernetes/manifests/kube-apiserver.yaml"
   ssh ${host} "sed -i 's/${CP0_IP}/${VIP}/g' ~/.kube/config"
+  ssh ${host} "sed -i 's/${ip}/${VIP}/g' /etc/kubernetes/manifests/kube-apiserver.yaml"
 done
 
 echo "Plugin install finished."
@@ -298,4 +300,4 @@ kubectl get pods -n kube-system
 
 echo """
 join command:
-  `kubeadm token create --print-join-command|sed "s/${CP0_IP}/${VIP}/g"`"""
+  `kubeadm token create --print-join-command`"""

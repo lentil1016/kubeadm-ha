@@ -21,5 +21,5 @@ $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/
 ## generate join command
 
 ``` shell
-kubeadm token create --print-join-command|sed 's/${LOCAL_IP}/${VIP}/g'
+kubeadm token create --print-join-command
 ```
