@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
+kubeadm init --kubernetes-version=v1.11.0 --pod-network-cidr=172.168.0.0/16
 mkdir -p $HOME/.kube
 rm -f $HOME/.kube/config
 cp -f /etc/kubernetes/admin.conf ${HOME}/.kube/config
