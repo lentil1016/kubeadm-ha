@@ -149,9 +149,9 @@ ${HEALTH_CHECK}
   ETCD_MEMBER="${ETCD_MEMBER}${host}=https://${ip}:2380"
 
   echo """
-apiVersion: kubeadm.k8s.io/v1alpha2
-kind: MasterConfiguration
-kubernetesVersion: v1.11.0
+apiVersion: kubeadm.k8s.io/v1alpha3
+kind: ClusterConfiguration
+kubernetesVersion: v1.12.1
 apiServerCertSANs:
 - ${CP0_IP}
 - ${CP1_IP}
@@ -160,9 +160,6 @@ apiServerCertSANs:
 - ${CP1_HOSTNAME}
 - ${CP2_HOSTNAME}
 - ${VIP}
-kubeProxy:
-  config:
-    mode: ipvs
 etcd:
   local:
     extraArgs:
@@ -181,6 +178,10 @@ etcd:
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: ${CIDR}
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
 """ > ~/ikube/kubeadm-config-m${index}.yaml
 
   scp ~/ikube/kubeadm-config-m${index}.yaml ${host}:/etc/kubernetes/kubeadm-config.yaml
@@ -234,8 +235,8 @@ for index in 1 2; do
     kubeadm alpha phase mark-master --config /etc/kubernetes/kubeadm-config.yaml"
 done
 
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/calico/rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/calico/calico.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/calico/rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/calico/calico.yaml
 
 echo "Cluster create finished."
 
@@ -269,17 +270,17 @@ emailAddress_value              = lentil1016@gmail.com
 """ > ~/ikube/tls/openssl.cnf
 openssl req -newkey rsa:4096 -nodes -config ~/ikube/tls/openssl.cnf -days 3650 -x509 -out ~/ikube/tls/tls.crt -keyout ~/ikube/tls/tls.key
 kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/ikube/tls/tls.key
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/traefik.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/heapster.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.11.0/plugin/kubernetes-dashboard.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/plugin/rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/plugin/traefik.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/plugin/heapster.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/plugin/kubernetes-dashboard.yaml
 
 for index in 0 1 2; do
   host=${HOSTS[${index}]}
   ip=${IPS[${index}]}
   ssh ${host} "sed -i 's/etcd-servers=https:\/\/127.0.0.1:2379/etcd-servers=https:\/\/${CP0_IP}:2379,https:\/\/${CP1_IP}:2379,https:\/\/${CP2_IP}:2379/g' /etc/kubernetes/manifests/kube-apiserver.yaml"
   ssh ${host} "sed -i 's/${CP0_IP}/${VIP}/g' ~/.kube/config"
-  ssh ${host} "sed -i 's/${ip}/${VIP}/g' /etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/kubelet.conf; systemctl restart kubelet"
+  ssh ${host} "sed -i 's/${ip}/${VIP}/g' /etc/kubernetes/kubelet.conf; systemctl restart kubelet"
 done
 
 echo "Plugin install finished."
