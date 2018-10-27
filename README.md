@@ -13,7 +13,7 @@ CP2_IP=10.130.29.82
 CP2_HOSTNAME=centos-7-x86-64-29-82
 VIP=10.130.29.83
 NET_IF=ens32
-CIDR=172.168.0.0/16
+CIDR=10.244.0.0/16
 
 $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/kubeha-gen.sh)"
 ```
