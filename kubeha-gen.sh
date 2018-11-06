@@ -124,9 +124,10 @@ vrrp_instance VI_1 {
 
 virtual_server ${VIP} 6443 {
     delay_loop 6
-    lb_algo rr
-    lb_kind NAT
-    persistence_timeout 50
+    lb_algo loadbalance
+    lb_kind DR
+    nat_mask 255.255.255.0
+    persistence_timeout 0
     protocol TCP
 
 ${HEALTH_CHECK}
