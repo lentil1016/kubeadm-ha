@@ -15,7 +15,7 @@ VIP=10.130.29.83
 NET_IF=ens32
 CIDR=10.244.0.0/16
 
-$ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.12.1/kubeha-gen.sh)"
+$ bash -c "$(curl -fsSL https://k8s.lentil1016.cn)"
 ```
 
 ## generate join command
