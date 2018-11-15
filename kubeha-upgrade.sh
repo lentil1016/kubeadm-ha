@@ -148,6 +148,9 @@ ${HEALTH_CHECK}
   ETCD_MEMBER="${ETCD_MEMBER}${host}=https://${ip}:2380"
 
   echo """
+kind: InitConfiguration
+apiVersion: kubeadm.k8s.io/v1alpha3
+---
 apiVersion: kubeadm.k8s.io/v1alpha2
 kind: MasterConfiguration
 kubernetesVersion: v1.11.0
