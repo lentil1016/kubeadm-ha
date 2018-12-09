@@ -89,7 +89,7 @@ spec:
         configMap:
           name: traefik-conf
       containers:
-      - image: k8s.gcr.io/traefik:1.7.3
+      - image: k8s.gcr.io/traefik:1.7.5
         name: traefik-ingress-lb
         ports:
         - name: http
