@@ -18,25 +18,13 @@ check_parm "Enter the IP address of master-01: " ${CP0_IP}
 if [ $? -eq 1 ]; then
 	read CP0_IP
 fi
-check_parm "Enter the Hostname of master-01: " ${CP0_HOSTNAME}
-if [ $? -eq 1 ]; then
-	read CP0_HOSTNAME
-fi
 check_parm "Enter the IP address of master-02: " ${CP1_IP}
 if [ $? -eq 1 ]; then
 	read CP1_IP
 fi
-check_parm "Enter the Hostname of master-02: " ${CP1_HOSTNAME}
-if [ $? -eq 1 ]; then
-	read CP1_HOSTNAME
-fi
 check_parm "Enter the IP address of master-03: " ${CP2_IP}
 if [ $? -eq 1 ]; then
 	read CP2_IP
-fi
-check_parm "Enter the Hostname of master-03: " ${CP2_HOSTNAME}
-if [ $? -eq 1 ]; then
-	read CP2_HOSTNAME
 fi
 check_parm "Enter the VIP: " ${VIP}
 if [ $? -eq 1 ]; then
@@ -54,11 +42,8 @@ fi
 echo """
 cluster-info:
   master-01:        ${CP0_IP}
-                    ${CP0_HOSTNAME}
   master-02:        ${CP1_IP}
-                    ${CP1_HOSTNAME}
   master-02:        ${CP2_IP}
-                    ${CP2_HOSTNAME}
   VIP:              ${VIP}
   Net Interface:    ${NET_IF}
   CIDR:             ${CIDR}
@@ -76,7 +61,6 @@ done
 
 mkdir -p ~/ikube/tls
 
-HOSTS=(${CP0_HOSTNAME} ${CP1_HOSTNAME} ${CP2_HOSTNAME})
 IPS=(${CP0_IP} ${CP1_IP} ${CP2_IP})
 
 PRIORITY=(100 50 30)
@@ -100,7 +84,6 @@ for index in 0 1 2; do
 done
 
 for index in 0 1 2; do
-  host=${HOSTS[${index}]}
   ip=${IPS[${index}]}
   echo """
 global_defs {
@@ -133,9 +116,9 @@ virtual_server ${VIP} 6443 {
 ${HEALTH_CHECK}
 }
 """ > ~/ikube/keepalived-${index}.conf
-  scp ~/ikube/keepalived-${index}.conf ${host}:/etc/keepalived/keepalived.conf
+  scp ~/ikube/keepalived-${index}.conf ${ip}:/etc/keepalived/keepalived.conf
 
-  ssh ${host} "
+  ssh ${ip} "
     systemctl restart keepalived
     kubeadm reset -f
     rm -rf /etc/kubernetes/pki/"
@@ -145,19 +128,16 @@ echo """
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 kubernetesVersion: v1.13.0
+controlPlaneEndpoint: "${VIP}:6443"
 apiServer:
   certSANs:
   - ${CP0_IP}
   - ${CP1_IP}
   - ${CP2_IP}
-  - ${CP0_HOSTNAME}
-  - ${CP1_HOSTNAME}
-  - ${CP2_HOSTNAME}
   - ${VIP}
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: ${CIDR}
-controlPlaneEndpoint: "10.130.29.83:6443"
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
@@ -174,21 +154,20 @@ curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico
 JOIN_CMD=`kubeadm token create --print-join-command`
 
 for index in 1 2; do
-  host=${HOSTS[${index}]}
   ip=${IPS[${index}]}
-  ssh $host "mkdir -p /etc/kubernetes/pki/etcd; mkdir -p ~/.kube/"
-  scp /etc/kubernetes/pki/ca.crt $host:/etc/kubernetes/pki/ca.crt
-  scp /etc/kubernetes/pki/ca.key $host:/etc/kubernetes/pki/ca.key
-  scp /etc/kubernetes/pki/sa.key $host:/etc/kubernetes/pki/sa.key
-  scp /etc/kubernetes/pki/sa.pub $host:/etc/kubernetes/pki/sa.pub
-  scp /etc/kubernetes/pki/front-proxy-ca.crt $host:/etc/kubernetes/pki/front-proxy-ca.crt
-  scp /etc/kubernetes/pki/front-proxy-ca.key $host:/etc/kubernetes/pki/front-proxy-ca.key
-  scp /etc/kubernetes/pki/etcd/ca.crt $host:/etc/kubernetes/pki/etcd/ca.crt
-  scp /etc/kubernetes/pki/etcd/ca.key $host:/etc/kubernetes/pki/etcd/ca.key
-  scp /etc/kubernetes/admin.conf $host:/etc/kubernetes/admin.conf
-  scp /etc/kubernetes/admin.conf $host:~/.kube/config
+  ssh $ip "mkdir -p /etc/kubernetes/pki/etcd; mkdir -p ~/.kube/"
+  scp /etc/kubernetes/pki/ca.crt $ip:/etc/kubernetes/pki/ca.crt
+  scp /etc/kubernetes/pki/ca.key $ip:/etc/kubernetes/pki/ca.key
+  scp /etc/kubernetes/pki/sa.key $ip:/etc/kubernetes/pki/sa.key
+  scp /etc/kubernetes/pki/sa.pub $ip:/etc/kubernetes/pki/sa.pub
+  scp /etc/kubernetes/pki/front-proxy-ca.crt $ip:/etc/kubernetes/pki/front-proxy-ca.crt
+  scp /etc/kubernetes/pki/front-proxy-ca.key $ip:/etc/kubernetes/pki/front-proxy-ca.key
+  scp /etc/kubernetes/pki/etcd/ca.crt $ip:/etc/kubernetes/pki/etcd/ca.crt
+  scp /etc/kubernetes/pki/etcd/ca.key $ip:/etc/kubernetes/pki/etcd/ca.key
+  scp /etc/kubernetes/admin.conf $ip:/etc/kubernetes/admin.conf
+  scp /etc/kubernetes/admin.conf $ip:~/.kube/config
 
-  ssh ${host} "${JOIN_CMD} --experimental-control-plane"
+  ssh ${ip} "${JOIN_CMD} --experimental-control-plane"
 done
 
 echo "Cluster create finished."

@@ -1,6 +1,21 @@
 #!/bin/bash
 
-kubeadm init --kubernetes-version=v1.13.0 --pod-network-cidr=10.244.0.0/16
+kubeadm reset -f
+
+echo """
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+kubernetesVersion: v1.13.0
+networking:
+  # This CIDR is a Calico default. Substitute or remove for your CNI provider.
+  podSubnet: 10.244.0.0/16
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+""" > /etc/kubernetes/kubeadm-config.yaml
+
+kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
 mkdir -p $HOME/.kube
 rm -f $HOME/.kube/config
 cp -f /etc/kubernetes/admin.conf ${HOME}/.kube/config
