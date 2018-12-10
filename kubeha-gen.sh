@@ -139,68 +139,39 @@ ${HEALTH_CHECK}
     systemctl restart keepalived
     kubeadm reset -f
     rm -rf /etc/kubernetes/pki/"
+done
 
-  if [ ${index} -ne 0 ]; then
-    ETCD_MEMBER="${ETCD_MEMBER},"
-    ETCD_STATUS="existing"
-  else
-    ETCD_MEMBER=""
-    ETCD_STATUS="new"
-  fi
-  ETCD_MEMBER="${ETCD_MEMBER}${host}=https://${ip}:2380"
-
-  echo """
-kind: InitConfiguration
-apiVersion: kubeadm.k8s.io/v1beta1
----
+echo """
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 kubernetesVersion: v1.13.0
-apiServerCertSANs:
-- ${CP0_IP}
-- ${CP1_IP}
-- ${CP2_IP}
-- ${CP0_HOSTNAME}
-- ${CP1_HOSTNAME}
-- ${CP2_HOSTNAME}
-- ${VIP}
-etcd:
-  local:
-    extraArgs:
-      listen-client-urls: https://127.0.0.1:2379,https://${ip}:2379
-      advertise-client-urls: https://${ip}:2379
-      listen-peer-urls: https://${ip}:2380
-      initial-advertise-peer-urls: https://${ip}:2380
-      initial-cluster: ${ETCD_MEMBER}
-      initial-cluster-state: ${ETCD_STATUS}
-    serverCertSANs:
-      - ${host}
-      - ${ip}
-    peerCertSANs:
-      - ${host}
-      - ${ip}
+apiServer:
+  certSANs:
+  - ${CP0_IP}
+  - ${CP1_IP}
+  - ${CP2_IP}
+  - ${CP0_HOSTNAME}
+  - ${CP1_HOSTNAME}
+  - ${CP2_HOSTNAME}
+  - ${VIP}
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: ${CIDR}
+controlPlaneEndpoint: "10.130.29.83:6443"
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
 mode: ipvs
-""" > ~/ikube/kubeadm-config-m${index}.yaml
-
-  scp ~/ikube/kubeadm-config-m${index}.yaml ${host}:/etc/kubernetes/kubeadm-config.yaml
-done
+""" > /etc/kubernetes/kubeadm-config.yaml
 
 kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
 mkdir -p $HOME/.kube
 cp -f /etc/kubernetes/admin.conf ${HOME}/.kube/config
 
-ETCD=`kubectl get pods -n kube-system 2>&1|grep etcd|awk '{print $3}'`
-echo "Waiting for etcd bootup..."
-while [ "${ETCD}" != "Running" ]; do
-  sleep 1
-  ETCD=`kubectl get pods -n kube-system 2>&1|grep etcd|awk '{print $3}'`
-done
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/rbac.yaml
+curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/calico.yaml | sed "s!8.8.8.8!${CP0_IP}!g" | sed "s!10.244.0.0/16!${CIDR}!g" | kubectl apply -f -
+
+JOIN_CMD=`kubeadm token create --print-join-command`
 
 for index in 1 2; do
   host=${HOSTS[${index}]}
@@ -217,31 +188,8 @@ for index in 1 2; do
   scp /etc/kubernetes/admin.conf $host:/etc/kubernetes/admin.conf
   scp /etc/kubernetes/admin.conf $host:~/.kube/config
 
-  kubectl exec \
-    -n kube-system etcd-${CP0_HOSTNAME} -- etcdctl \
-    --ca-file /etc/kubernetes/pki/etcd/ca.crt \
-    --cert-file /etc/kubernetes/pki/etcd/peer.crt \
-    --key-file /etc/kubernetes/pki/etcd/peer.key \
-    --endpoints=https://${CP0_IP}:2379 \
-    member add ${host} https://${ip}:2380
-
-  ssh ${host} "
-    kubeadm alpha phase certs all --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase kubeconfig controller-manager --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase kubeconfig scheduler --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase kubelet config write-to-disk --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase kubelet write-env-file --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase kubeconfig kubelet --config /etc/kubernetes/kubeadm-config.yaml
-    systemctl restart kubelet
-    kubeadm alpha phase etcd local --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase kubeconfig all --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase controlplane all --config /etc/kubernetes/kubeadm-config.yaml
-    kubeadm alpha phase mark-master --config /etc/kubernetes/kubeadm-config.yaml"
+  ssh ${host} "${JOIN_CMD} --experimental-control-plane"
 done
-
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/rbac.yaml
-curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/calico.yaml | sed "s!8.8.8.8!${CP0_IP}!g" | sed "s!10.244.0.0/16!${CIDR}!g" | kubectl apply -f -
-
 
 echo "Cluster create finished."
 
@@ -278,14 +226,6 @@ kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/traefik.yaml
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/metrics.yaml
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/kubernetes-dashboard.yaml
-
-for index in 0 1 2; do
-  host=${HOSTS[${index}]}
-  ip=${IPS[${index}]}
-  ssh ${host} "sed -i 's/etcd-servers=https:\/\/127.0.0.1:2379/etcd-servers=https:\/\/${CP0_IP}:2379,https:\/\/${CP1_IP}:2379,https:\/\/${CP2_IP}:2379/g' /etc/kubernetes/manifests/kube-apiserver.yaml"
-  ssh ${host} "sed -i 's/${CP0_IP}/${VIP}/g' ~/.kube/config"
-  ssh ${host} "sed -i 's/${ip}/${VIP}/g' /etc/kubernetes/kubelet.conf; systemctl restart kubelet"
-done
 
 echo "Plugin install finished."
 echo "Waiting for all pods into 'Running' statu. You can press 'Ctrl + c' to terminate this waiting any time you like."
