@@ -48,13 +48,13 @@ cluster-info:
   Net Interface:    ${NET_IF}
   CIDR:             ${CIDR}
 """
-echo -n 'Please print "yes" to continue or "no" to cancle: '
+echo -n 'Please print "yes" to continue or "no" to cancel: '
 read AGREE
 while [ "${AGREE}" != "yes" ]; do
 	if [ "${AGREE}" == "no" ]; then
 		exit 0;
 	else
-		echo -n 'Please print "yes" to continue or "no" to cancle: '
+		echo -n 'Please print "yes" to continue or "no" to cancel: '
 		read AGREE
 	fi
 done
@@ -207,7 +207,7 @@ kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/kubernetes-dashboard.yaml
 
 echo "Plugin install finished."
-echo "Waiting for all pods into 'Running' statu. You can press 'Ctrl + c' to terminate this waiting any time you like."
+echo "Waiting for all pods into 'Running' status. You can press 'Ctrl + c' to terminate this waiting any time you like."
 POD_UNREADY=`kubectl get pods -n kube-system 2>&1|awk '{print $3}'|grep -vE 'Running|STATUS'`
 NODE_UNREADY=`kubectl get nodes 2>&1|awk '{print $2}'|grep 'NotReady'`
 while [ "${POD_UNREADY}" != "" -o "${NODE_UNREADY}" != "" ]; do
