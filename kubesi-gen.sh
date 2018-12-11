@@ -21,7 +21,7 @@ rm -f $HOME/.kube/config
 cp -f /etc/kubernetes/admin.conf ${HOME}/.kube/config
 
 kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/rbac.yaml
-curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.1/calico/calico.yaml | sed "s!8.8.8.8!${CP0_IP}!g" | sed "s!10.244.0.0/16!${CIDR}!g" | kubectl apply -f -
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/calico.yaml
 
 echo "Cluster create finished."
 
