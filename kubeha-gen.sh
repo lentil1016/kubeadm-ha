@@ -119,7 +119,9 @@ ${HEALTH_CHECK}
   scp ~/ikube/keepalived-${index}.conf ${ip}:/etc/keepalived/keepalived.conf
 
   ssh ${ip} "
-    systemctl restart keepalived
+    systemctl stop keepalived
+    systemctl enable keepalived
+    systemctl start keepalived
     kubeadm reset -f
     rm -rf /etc/kubernetes/pki/"
 done
