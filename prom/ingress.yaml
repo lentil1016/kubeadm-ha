@@ -1,0 +1,49 @@
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata: 
+  name: prometheus
+  namespace: kube-system 
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: prometheus.multi.io
+    http:
+      paths:
+      - backend:
+          serviceName: prometheus-k8s
+          servicePort: 9090
+        path: /
+---
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: alertmanager
+  namespace: kube-system 
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: alert.multi.io
+    http:
+      paths:
+      - backend:
+          serviceName: alertmanager-main
+          servicePort: 9093
+        path: /
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: kube-system 
+spec:
+  rules:
+  - host: grafana.multi.io
+    http:
+      paths:
+      - path: /
+        backend:
+         serviceName: grafana
+         servicePort: 3000
+
