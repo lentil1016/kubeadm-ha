@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rook
+  namespace: rook-ceph
+spec:
+  rules:
+  - host: rook.micro.io
+    http:
+      paths:
+      - path: /
+        backend:
+         serviceName: rook-ceph-mgr-dashboard
+         servicePort: 8443
+
