@@ -9,10 +9,6 @@ kubernetesVersion: v1.13.0
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: 10.244.0.0/16
----
-apiVersion: kubeproxy.config.k8s.io/v1alpha1
-kind: KubeProxyConfiguration
-mode: ipvs
 """ > /etc/kubernetes/kubeadm-config.yaml
 
 kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
