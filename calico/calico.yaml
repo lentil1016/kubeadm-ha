@@ -102,7 +102,7 @@ spec:
         # This container installs the Calico CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
-          image: calico/cni:v3.5.3
+          image: quay.io/calico/cni:v3.5.3
           command: ["/install-cni.sh"]
           env:
             # Name of the CNI config file to create.
@@ -138,7 +138,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: calico-node
-          image: calico/node:v3.5.3
+          image: quay.io/calico/node:v3.5.3
           env:
             # Use Kubernetes API as the backing datastore.
             - name: DATASTORE_TYPE
@@ -163,6 +163,8 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: "autodetect"
+            - name: IP_AUTODETECTION_METHOD
+              value: "can-reach=8.8.8.8"
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
