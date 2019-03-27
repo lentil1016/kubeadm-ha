@@ -109,7 +109,7 @@ virtual_server ${VIP} 6443 {
     delay_loop 6
     lb_algo loadbalance
     lb_kind DR
-    nat_mask 255.255.255.0
+    net_mask 255.255.255.0
     persistence_timeout 0
     protocol TCP
 
@@ -129,7 +129,7 @@ done
 echo """
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
-kubernetesVersion: v1.13.0
+kubernetesVersion: v1.14.0
 controlPlaneEndpoint: "${VIP}:6443"
 apiServer:
   certSANs:
@@ -150,8 +150,7 @@ kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
 mkdir -p $HOME/.kube
 cp -f /etc/kubernetes/admin.conf ${HOME}/.kube/config
 
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/rbac.yaml
-curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/calico.yaml | sed "s!8.8.8.8!${CP0_IP}!g" | sed "s!10.244.0.0/16!${CIDR}!g" | kubectl apply -f -
+curl -fsSL https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/calico/calico.yaml | sed "s!8.8.8.8!${CP0_IP}!g" | sed "s!192.168.0.0/16!${CIDR}!g" | kubectl apply -f -
 
 JOIN_CMD=`kubeadm token create --print-join-command`
 
@@ -204,9 +203,9 @@ emailAddress_value              = lentil1016@gmail.com
 """ > ~/ikube/tls/openssl.cnf
 openssl req -newkey rsa:4096 -nodes -config ~/ikube/tls/openssl.cnf -days 3650 -x509 -out ~/ikube/tls/tls.crt -keyout ~/ikube/tls/tls.key
 kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/ikube/tls/tls.key
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/traefik.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/metrics.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/kubernetes-dashboard.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/plugin/traefik.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/plugin/metrics.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/plugin/kubernetes-dashboard.yaml
 
 echo "Plugin install finished."
 echo "Waiting for all pods into 'Running' status. You can press 'Ctrl + c' to terminate this waiting any time you like."

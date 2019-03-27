@@ -5,7 +5,7 @@ kubeadm reset -f
 echo """
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
-kubernetesVersion: v1.13.0
+kubernetesVersion: v1.14.0
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
   podSubnet: 10.244.0.0/16
@@ -20,8 +20,7 @@ mkdir -p $HOME/.kube
 rm -f $HOME/.kube/config
 cp -f /etc/kubernetes/admin.conf ${HOME}/.kube/config
 
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/calico/calico.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/calico/calico.yaml
 
 echo "Cluster create finished."
 
@@ -49,9 +48,9 @@ emailAddress_value              = lentil1016@gmail.com
 openssl req -newkey rsa:4096 -nodes -config ~/ikube/tls/openssl.cnf -days 3650 -x509 -out ~/ikube/tls/tls.crt -keyout ~/ikube/tls/tls.key
 
 kubectl create -n kube-system secret tls ssl --cert ~/ikube/tls/tls.crt --key ~/ikube/tls/tls.key
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/traefik.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/metrics.yaml
-kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.13.0/plugin/kubernetes-dashboard.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/plugin/traefik.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/plugin/metrics.yaml
+kubectl apply -f https://raw.githubusercontent.com/Lentil1016/kubeadm-ha/1.14.0/plugin/kubernetes-dashboard.yaml
 
 echo "Plugin install finished."
 echo "Waiting for all pods into 'Running' statu. You can press 'Ctrl + c' to terminate this waiting any time you like."
