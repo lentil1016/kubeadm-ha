@@ -8,7 +8,7 @@ kind: ClusterConfiguration
 kubernetesVersion: v1.14.0
 networking:
   # This CIDR is a Calico default. Substitute or remove for your CNI provider.
-  podSubnet: 10.244.0.0/16
+  podSubnet: 192.168.0.0/16
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
